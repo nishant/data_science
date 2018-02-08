@@ -1,3 +1,7 @@
+# Nishant Arora
+# CMSC 320
+# HW 1
+
 ```{r knitr_setup, echo=FALSE}
 knitr::opts_chunk$set(cache=TRUE)
 ```
@@ -6,31 +10,49 @@ knitr::opts_chunk$set(cache=TRUE)
 
 _1) Provide a URL to the dataset._
 
-https://catalog.data.gov/dataset/most-popular-baby-names-by-sex-and-mothers-ethnic-group-new-york-city-8c742
+Dataset source: https://catalog.data.gov/dataset/most-popular-baby-names-by-sex-and-mothers-ethnic-group-new-york-city-8c742
+
 
 _2) Explain why you chose this dataset._ 
 
-I found the data set to be interesting since I visit the city often and was curious.  The dataset is clear and concise so I can create a plot easily. The file size also was quite reasonable and not extremely large.
+I found the data set to be interesting since I visit the city often and was curious. The dataset is clear and concise so I can create a plot easily. The file size also was quite reasonable and not extremely large.
+
 
 _3) What are the entities in this dataset? How many are there?_
+
+The entitites are babies born between 2011 and 2014 in NYC. There are 22,035 entities in the initial dataset but there are duplicate values for every entity. After removing the duplicates, there are 8,073 entities.
 
 
 _4) How many attributes are there in this dataset?_
 
+There are 6 attributes: Year of Birth, Gender, Ethnicity, Child's First Name, Count, Rank.
+
 
 _5) What is the datatype of each attribute (categorical -ordered or unordered-, numeric -discrete or continuous-, datetime, geolocation, other)? Write a short sentence stating how you determined the type of each attribute. Do this for at least 5 attributes, if your dataset contains more than 10 attributes, choose 10 of them to describe._
 
-| Num | Name | Type | Description |
-|-----|------|------|-------------|
-| 1 | <name> | <type> | <descr> |
+| Num |         Name         |          Type         |                            Description                             |
+|-----|----------------------|-----------------------|--------------------------------------------------------------------|
+|  1  |    `Year of Birth`   |    numeric-discrete   |             The year must be 2011, 2012, 2013, or 2014             |
+|  2  |       `Gender`       | categorical-unordered |          Non-numeric, must be from the (unordered) set M, F        |
+|  3  |      `Ethnicity`     | categorical-unordered | Non-numeric, must be from a finites set of (unordered) ethnicities |
+|  4  | `Child's First Name` | categorical-unordered |                  Name is being used to build models                |
+|  5  |       `Count`        |    numeric-discrete   |                    Must be an exact whole number                   |
+|  6  |        `Rank`        |    numeric-discrete   |                    Must be an exact whole number                   |
+
 
 _6) Write R code that loads the dataset using function `read_csv`. Were you able to load the data successfully? If no, why not?_
 
 ```{r load_data, message=FALSE}
 library(tidyverse)
+
 # loading code
 name_tab <- read_csv("Most_Popular_Baby_Names_by_Sex_and_Mother_s_Ethnic_Group__New_York_City.csv")
-name_tab
+View(name_tab)
+name_tab %>% slice(1:10)
+
+# removing duplicate entities code
+dup_free_tab <- unique(name_tab[ , 1:6 ])
+View(dup_free_tab)
 ```
 
 ## Wrangling
