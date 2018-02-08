@@ -44,38 +44,33 @@ _6) Write R code that loads the dataset using function `read_csv`. Were you able
 ```{r load_data, message=FALSE}
 library(tidyverse)
 
-# loading code
 name_tab <- read_csv("Most_Popular_Baby_Names_by_Sex_and_Mother_s_Ethnic_Group__New_York_City.csv")
-View(name_tab)
 name_tab %>% slice(1:10)
+View(name_tab)
 ```
 
 ## Wrangling
 
-1) My dataset contains duplicate values, so my pipeline converts all first name's to uppercase, removes duplicate names with the same year, gender and ethnicity, and picks the 5 most popular names for Hispanic children in 2013.
+1) My dataset contains duplicate values, so my pipeline removes duplicate names with the same year, gender and ethnicity, it also displays the top 5 most popular names for Hispanic children born in NYC in 2013.
 
 
 ```{r pipeline}
-# convert to uppercase
 top_5_tab <- name_tab %>%
-  toupper(top_5_tab[,4]) %>%
-  unique(top_5_tab[ , 1:4 ]) %>%
-  group_by(Count) %>%
+  filter(`Year of Birth` == 2013) %>%
+  select(Gender, Ethnicity, `Child's First Name`, Count) %>%
+  unique() %>%
+  group_by(Ethnicity="HISPANIC") %>%
   arrange(desc(Count)) %>%
-  slice(top_5_tab, 1:5)
+  slice(1:5)
 top_5_tab
-
-  
-  
-
-  
-
 ```
 
 ## Plotting
 
-1) This plot... 
+1) This plot shows the 5 most popular Hispanic baby names in NYC in 2013.
 
 ```{r plot}
-# plot goes here
+top_5_tab %>%
+  ggplot(aes(x=`Child's First Name`, y=Count)) + geom_bar(stat="identity") 
+top_5_tab
 ```
