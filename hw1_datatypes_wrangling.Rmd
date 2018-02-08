@@ -20,8 +20,7 @@ I found the data set to be interesting since I visit the city often and was curi
 
 _3) What are the entities in this dataset? How many are there?_
 
-The entitites are babies born between 2011 and 2014 in NYC. There are 22,035 entities in the initial dataset but there are duplicate values for every entity. After removing the duplicates, there are 8,073 entities.
-
+The entitites are babies born between 2011 and 2014 in NYC. There are 22,035 entities in the dataset. 
 
 _4) How many attributes are there in this dataset?_
 
@@ -49,18 +48,28 @@ library(tidyverse)
 name_tab <- read_csv("Most_Popular_Baby_Names_by_Sex_and_Mother_s_Ethnic_Group__New_York_City.csv")
 View(name_tab)
 name_tab %>% slice(1:10)
-
-# removing duplicate entities code
-dup_free_tab <- unique(name_tab[ , 1:6 ])
-View(dup_free_tab)
 ```
 
 ## Wrangling
 
-1) My pipeline... 
+1) My dataset contains duplicate values, so my pipeline converts all first name's to uppercase, removes duplicate names with the same year, gender and ethnicity, and picks the 5 most popular names for Hispanic children in 2013.
+
 
 ```{r pipeline}
-# pipeline goes here
+# convert to uppercase
+top_5_tab <- name_tab %>%
+  toupper(top_5_tab[,4]) %>%
+  unique(top_5_tab[ , 1:4 ]) %>%
+  group_by(Count) %>%
+  arrange(desc(Count)) %>%
+  slice(top_5_tab, 1:5)
+top_5_tab
+
+  
+  
+
+  
+
 ```
 
 ## Plotting
