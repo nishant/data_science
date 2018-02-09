@@ -1,16 +1,19 @@
-# Nishant Arora
-# CMSC 320
-# HW 1
+#### Nishant Arora
+#### CMSC 320
+#### HW 1  
+
 
 ```{r knitr_setup, echo=FALSE}
 knitr::opts_chunk$set(cache=TRUE)
 ```
 
-## Data types
+#### Data types
+
 
 _1) Provide a URL to the dataset._
 
 Dataset source: https://catalog.data.gov/dataset/most-popular-baby-names-by-sex-and-mothers-ethnic-group-new-york-city-8c742
+
 
 
 _2) Explain why you chose this dataset._ 
@@ -44,12 +47,11 @@ _6) Write R code that loads the dataset using function `read_csv`. Were you able
 ```{r load_data, message=FALSE}
 library(tidyverse)
 
-name_tab <- read_csv("Most_Popular_Baby_Names_by_Sex_and_Mother_s_Ethnic_Group__New_York_City.csv")
+name_tab <- read_csv("/Users/nishant/Desktop/data_science/Most_Popular_Baby_Names_by_Sex_and_Mother_s_Ethnic_Group__New_York_City.csv")
 name_tab %>% slice(1:10)
-View(name_tab)
 ```
 
-## Wrangling
+#### Wrangling
 
 1) My dataset contains duplicate values, so my pipeline removes duplicate names with the same year, gender and ethnicity, it also displays the top 5 most popular names for Hispanic children born in NYC in 2013.
 
@@ -65,7 +67,7 @@ top_5_tab <- name_tab %>%
 top_5_tab
 ```
 
-## Plotting
+#### Plotting
 
 1) This plot shows the 5 most popular Hispanic baby names in NYC in 2013.
 
