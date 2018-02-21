@@ -1,34 +1,34 @@
+# Nishant Arora
+# CMSC320 HW 2
+
 ## ER Diagram
 
-_DELETE THESE INSTRUCTIONS FROM YOUR SUBMISSION: Make a `PNG` or `JPEG` file with your diagram and insert here:_
-
-![](/Users/hcorrada/tmp/er.png)
+![](/Users/nishant/Desktop/data_science/hw2/erd.jpg)
 
 ## SQL
 
 ```{r setupdb, include=FALSE}
-# make sure you write the path to your sqlite path here
-db <- DBI::dbConnect(RSQLite::SQLite(), "~/Desktop/data_science/hw2/lahman2016.sqlite")
+# path to sqlite path here
+db <- DBI::dbConnect(RSQLite::SQLite(), "/Users/nishant/Desktop/data_science/hw2/lahman2016.sqlite")
 ```
 
-_DELETE THESE INSTRUCTIONS FROM YOUR SUBMISSION: write SQL in each of these chunks, set `eval=TRUE` to evaluate_
 
 1) How many franchises are listed in the database (see [`count`](https://sqlite.org/lang_aggfunc.html#count))?
 
-```{sql q1, connection=db, eval=FALSE}
+```{sql q1, connection=db, eval=TRUE}
 select count(*) from TeamsFranchises;
 ```
 
 2) How many franchises are currently active?
 
-```{sql q2, connection=db, eval=FALSE}
+```{sql q2, connection=db, eval=TRUE}
 select count(*) from TeamsFranchises 
 where active = "Y";
 ```
 
 3) Which teams won more than 100 games in one season between 2000 and 2015? Order result by descending number of wins. (attribute `W` of the Teams table contains the number of wins)
 
-```{sql q3, connection=db, eval=FALSE}
+```{sql q3, connection=db, eval=TRUE}
 select teamID, yearID, W from Teams 
 where W > 100 
 and yearID between 2000 and 2015
@@ -38,24 +38,32 @@ order by W desc;
 
 4) What is the franchise name of the team with the most total wins in the database?
 
-```{sql q4, connection=db, eval=FALSE}
-select teamID, W from Teams
+```{sql q4, connection=db, eval=TRUE}
+select franchName, teamID, max(s) from 
+(select franchName, teamID, sum(W) as s from
+Teams join TeamsFranchises on Teams.franchID = TeamsFranchises.franchID
+group by teamID) 
 ```
 
 5) What is the franchise name of the team with the highest winning percentage in a season in the database? (Win percentage is `W/G`)
 
-```{sql q5, connection=db, eval=FALSE}
+```{sql q5, connection=db, eval=TRUE}
+select franchName, yearID, teamID, max(p) from
+
+(select franchName, yearID, teamID, 1.0 * W / G as p from
+Teams join TeamsFranchises on Teams.franchID = TeamsFranchises.franchID
+group by teamID, yearID);
 ```
 
 6) What is the franchise name of the team with the highest single-year payroll between 2000 and 2015?
 
-```{sql q6, connection=db, eval=FALSE}
+```{sql q6, connection=db, eval=TRUE}
+select yearID, teamID, franchName, max(s) from
+(select Teams.franchID, franchName, Teams.yearID, Teams.teamID, sum(salary) as s from Teams join Salaries on Teams.yearID = Salaries.yearID join TeamsFranchises on Teams.franchID = TeamsFranchises.franchID
+where Salaries.yearID between 2000 and 2015
+group by Salaries.teamID, Salaries.yearID)
 ```
 
-7) (BONUS from [MDSR book](https://mdsr-book.github.io/)): Identify players (by first and last name) that have attained through their career either a) 500 or more HRs or b) 3000 or more hits (H) _and_ have not been inducted to the Hall of Fame (see `HallOfFame` table).
-
-```{sql q7, connection=db, eval=FALSE}
-```
 
 ```{r disconnectdb, include=FALSE}
 DBI::dbDisconnect(db)
