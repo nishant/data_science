@@ -1,0 +1,383 @@
+```{r knitr_setup, echo=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+```{r, echo=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+```
+
+#### Nishant Arora
+#### CMSC 320
+#### Worked with William Heberer
+#### Project 1: Data Scraping and Cleaning
+
+### Part 1: Data scraping and preparation
+#### Step 1: Scrape Data for SpaceWeatherLive.com
+\newline
+
+* Use the read_html function to read the html page from the url above
+* Use the html_node function to find the page node corresponding to the table
+* Use the html_table to parse the table into a data frame
+* Finish the pipeline with a call to as_data_frame to make the data frame
+
+```{r, eval=FALSE}
+dl_tab <- url %>%
+  read_html() %>%
+  html_node(".table-striped") %>%
+  html_table() %>%
+  as.data.frame()
+```
+
+* Rename attributes to some reasonable names
+
+```{r, eval=FALSE}
+names(dl_tab) <- c("rank", "flare_classification", "date", "flare_region", "start_time", "maximum_time", "end_time", "movie")
+```
+
+The resulting tibble:
+
+```{r, eval=TRUE, echo=FALSE}
+library(rvest, quietly = TRUE, warn.conflicts = FALSE)
+library(tidyr, quietly = TRUE, warn.conflicts = FALSE)
+library(stringr, quietly = TRUE, warn.conflicts = FALSE)
+library(tidyverse, quietly = TRUE, warn.conflicts = FALSE)
+library(lubridate, quietly = TRUE, warn.conflicts = FALSE)
+
+url <- "https://www.spaceweatherlive.com/en/solar-activity/top-50-solar-flares"
+
+# scrape table
+dl_tab <- url %>%
+  read_html() %>%
+  html_node(".table-striped") %>%
+  html_table() %>%
+  as.data.frame()
+
+# rename cols
+names(dl_tab) <- c("rank", "flare_classification", "date", "flare_region", "start_time", "maximum_time", "end_time", "movie")
+
+# show first few rows
+head(dl_tab)
+```
+
+#### Step 2: Tidy the top 50 solar flare data
+
+* Drop the last column of the table
+
+```{r, eval=FALSE}
+dl_tab$movie <- NULL
+```
+
+* Combine the date and each of the three time columns into three datetime columns
+```{r, eval=FALSE}
+dl_tab <- unite(dl_tab, start_datetime, date, start_time, sep = " ", remove = FALSE)
+dl_tab <- unite(dl_tab, max_datetime, date, maximum_time, sep = " ", remove = FALSE)
+dl_tab <- unite(dl_tab, end_datetime, date, end_time, sep = " ", remove = FALSE)
+
+# remove extra columns
+dl_tab$date <- NULL
+dl_tab$start_time <- NULL
+dl_tab$maximum_time <- NULL
+dl_tab$end_time <- NULL
+```
+
+* Convert columns containing datetimes into actual datetime objects
+```{r, eval=FALSE}
+# in POSIX form
+dl_tab$start_datetime <- as.POSIXct(dl_tab$start_datetime, tz="")
+dl_tab$max_datetime <- as.POSIXct(dl_tab$max_datetime, tz="")
+dl_tab$end_datetime <- as.POSIXct(dl_tab$end_datetime, tz="")
+```
+
+The resulting tibble:
+```{r, eval=TRUE, echo=FALSE}
+# drop last column
+dl_tab$movie <- NULL
+
+# combine date and times 
+dl_tab <- unite(dl_tab, start_datetime, date, start_time, sep = " ", remove = FALSE)
+dl_tab <- unite(dl_tab, max_datetime, date, maximum_time, sep = " ", remove = FALSE)
+dl_tab <- unite(dl_tab, end_datetime, date, end_time, sep = " ", remove = FALSE)
+
+# remove extra columns
+dl_tab$date <- NULL
+dl_tab$start_time <- NULL
+dl_tab$maximum_time <- NULL
+dl_tab$end_time <- NULL
+
+# convert to datetime (POSIX)
+dl_tab$start_datetime <- as.POSIXct(dl_tab$start_datetime, tz="")
+dl_tab$max_datetime <- as.POSIXct(dl_tab$max_datetime, tz="")
+dl_tab$end_datetime <- as.POSIXct(dl_tab$end_datetime, tz="")
+
+head(dl_tab)
+```
+
+#### Step 3: Scrape the NASA data 
+
+* Obtain each row of data as a long string. 
+* Create a data_frame
+* Separate each line of text into a data row. 
+* Choose appropriate names for columns.
+
+```{r, eval=FALSE}
+nasa <- "https://cdaw.gsfc.nasa.gov/CME_list/radio/waves_type2.html"
+
+# scrape nasa table
+nasa_tab <- nasa %>%
+  read_html() %>%
+  html_node("pre") %>%
+  html_text() %>%
+  str_split("\\n") %>%
+  as.data.frame() %>%
+  slice(13:n()-3) %>%
+  slice(4:n()) %>%
+  separate(1, c("start_date","start_time", "end_date", "end_time", "start_frequency", "end_frequency", "flare_location", "flare_region", "flare_classification", "cme_date", "cme_time", "cme_angle", "cme_width", "cme_speed"), sep="[:space:]+")
+```
+
+The resulting tibble:
+
+```{r, eval=TRUE, echo=FALSE}
+nasa <- "https://cdaw.gsfc.nasa.gov/CME_list/radio/waves_type2.html"
+
+# scrape nasa table
+nasa_tab <- nasa %>%
+  read_html() %>%
+  html_node("pre") %>%
+  html_text() %>%
+  str_split("\\n") %>%
+  as.data.frame() %>%
+  slice(13:n()-3) %>%
+  slice(4:n()) %>%
+  separate(1, c("start_date","start_time", "end_date", "end_time", "start_frequency", "end_frequency", "flare_location", "flare_region", "flare_classification", "cme_date", "cme_time", "cme_angle", "cme_width", "cme_speed"), sep="[:space:]+")
+nasa_tab
+```
+
+#### Step 4: Tidy the NASA the table
+
+* Recode any missing entries as NA
+```{r, eval=FALSE}
+nasa_tab[nasa_tab=="????"] <- NA
+nasa_tab[nasa_tab=="BACK"] <- NA
+nasa_tab[nasa_tab=="Back"] <- NA
+nasa_tab[nasa_tab=="Back?"] <- NA
+nasa_tab[nasa_tab=="----"] <- NA
+nasa_tab[nasa_tab=="---"] <- NA
+nasa_tab[nasa_tab=="------"] <- NA
+nasa_tab[nasa_tab=="-----"] <- NA
+nasa_tab[nasa_tab=="--:--"] <- NA
+nasa_tab[nasa_tab=="--/--"] <- NA
+nasa_tab[nasa_tab=="LASCO DATA GAP"] <- NA
+```
+
+* Create a new (logical) column that indicates if a row corresponds to a halo flare or not, and then replace Halo entries in the cme_angle column as NA.
+* Create a new (logical) column that indicates if width is given as a lower bound, and remove any non-numeric part of the width column.
+
+```{r, eval=FALSE}
+tidy_nasa_tab <- nasa_tab %>%
+  mutate(halo = cme_angle == "Halo") %>%
+  mutate(cme_width_limit = cme_width == str_match(cme_width, ">\\d+")) %>%
+  mutate(cme_width_limit = !is.na(cme_width_limit)) %>%
+  separate(cme_width, c("trash", "cme_width"), sep=">", fill = "left")
+```
+
+* Combine date and time columns for start, end and cme so they can be encoded as datetime objects.
+
+```{r, eval=FALSE}
+# converting dates and times to single datetime columns
+tidy_nasa_tab <- unite(tidy_nasa_tab, start_datetime, start_date, start_time, sep = " ", remove = FALSE)
+tidy_nasa_tab <- unite(tidy_nasa_tab, end_datetime, end_date, end_time, sep = " ", remove = FALSE)
+tidy_nasa_tab <- unite(tidy_nasa_tab, cme_datetime, cme_date, cme_time, sep = " ", remove = FALSE)
+
+# clearing excess columns and getting rid of 'halo'
+tidy_nasa_tab$start_date <- NULL
+tidy_nasa_tab$start_time <- NULL
+tidy_nasa_tab$end_date <- NULL
+tidy_nasa_tab$end_time <- NULL
+tidy_nasa_tab$cme_date <- NULL
+tidy_nasa_tab$cme_time <- NULL
+tidy_nasa_tab$trash <- NULL
+tidy_nasa_tab[tidy_nasa_tab=="Halo"] <- NA
+
+# grabbing year from start date and adding it on to the others
+tidy_nasa_tab <- separate(tidy_nasa_tab, start_datetime, c("temp", "start_datetime"), sep = "/", extra = "merge")
+
+# uniting year to all datetime columns
+tidy_nasa_tab <- unite(tidy_nasa_tab, start_datetime, temp, start_datetime, sep = "/", remove = FALSE)
+tidy_nasa_tab <- unite(tidy_nasa_tab, end_datetime, temp, end_datetime, sep = "/", remove = FALSE)
+tidy_nasa_tab <- unite(tidy_nasa_tab, cme_datetime, temp, cme_datetime, sep = "/", remove = FALSE)
+
+# changing appropriate columns to datetime
+tidy_nasa_tab <- mutate(tidy_nasa_tab, start_datetime = ymd_hm(start_datetime))
+tidy_nasa_tab <- mutate(tidy_nasa_tab, end_datetime = ymd_hm(end_datetime))
+tidy_nasa_tab <- mutate(tidy_nasa_tab, cme_datetime = ymd_hm(cme_datetime))
+```
+
+* Convert columns to appropriate types
+```{r, eval=FALSE}
+tidy_nasa_tab <- type_convert(tidy_nasa_tab)
+```
+
+The resulting tibble:
+
+```{r, eval=TRUE, echo=FALSE}
+nasa_tab <- nasa %>%
+  read_html() %>%
+  html_node("pre") %>%
+  html_text() %>%
+  str_split("\\n") %>%
+  as.data.frame() %>%
+  slice(13:n()-3) %>%
+  slice(4:n()) %>%
+  separate(1, c("start_date","start_time", "end_date", "end_time", "start_frequency", "end_frequency", "flare_location", "flare_region", "flare_classification", "cme_date", "cme_time", "cme_angle", "cme_width", "cme_speed"), sep="[:space:]+")
+
+#handling mising data
+nasa_tab[nasa_tab=="????"] <- NA
+nasa_tab[nasa_tab=="BACK"] <- NA
+nasa_tab[nasa_tab=="Back"] <- NA
+nasa_tab[nasa_tab=="Back?"] <- NA
+nasa_tab[nasa_tab=="----"] <- NA
+nasa_tab[nasa_tab=="---"] <- NA
+nasa_tab[nasa_tab=="------"] <- NA
+nasa_tab[nasa_tab=="-----"] <- NA
+nasa_tab[nasa_tab=="--:--"] <- NA
+nasa_tab[nasa_tab=="--/--"] <- NA
+nasa_tab[nasa_tab=="LASCO DATA GAP"] <- NA
+
+#tidying up the cme columns
+tidy_nasa_tab <- nasa_tab %>%
+  mutate(halo = cme_angle == "Halo") %>%
+  mutate(cme_width_limit = cme_width == str_match(cme_width, ">\\d+")) %>%
+  mutate(cme_width_limit = !is.na(cme_width_limit)) %>%
+  separate(cme_width, c("trash", "cme_width"), sep=">", fill = "left")
+
+#converting dates and times to single datetime columns
+tidy_nasa_tab <- unite(tidy_nasa_tab, start_datetime, start_date, start_time, sep = " ", remove = FALSE)
+tidy_nasa_tab <- unite(tidy_nasa_tab, end_datetime, end_date, end_time, sep = " ", remove = FALSE)
+tidy_nasa_tab <- unite(tidy_nasa_tab, cme_datetime, cme_date, cme_time, sep = " ", remove = FALSE)
+
+#clearing excess columns and getting rid of 'halo'
+tidy_nasa_tab$start_date <- NULL
+tidy_nasa_tab$start_time <- NULL
+tidy_nasa_tab$end_date <- NULL
+tidy_nasa_tab$end_time <- NULL
+tidy_nasa_tab$cme_date <- NULL
+tidy_nasa_tab$cme_time <- NULL
+tidy_nasa_tab$trash <- NULL
+tidy_nasa_tab[tidy_nasa_tab=="Halo"] <- NA
+
+#grabbing year from start date and adding it on to the others
+tidy_nasa_tab <- separate(tidy_nasa_tab, start_datetime, c("temp", "start_datetime"), sep = "/", extra = "merge")
+
+#uniting year to all datetime columns
+tidy_nasa_tab <- unite(tidy_nasa_tab, start_datetime, temp, start_datetime, sep = "/", remove = FALSE)
+tidy_nasa_tab <- unite(tidy_nasa_tab, end_datetime, temp, end_datetime, sep = "/", remove = FALSE)
+tidy_nasa_tab <- unite(tidy_nasa_tab, cme_datetime, temp, cme_datetime, sep = "/", remove = FALSE)
+
+#changing appropriate columns to datetime
+tidy_nasa_tab <- mutate(tidy_nasa_tab, start_datetime = ymd_hm(start_datetime))
+tidy_nasa_tab <- mutate(tidy_nasa_tab, end_datetime = ymd_hm(end_datetime))
+tidy_nasa_tab <- mutate(tidy_nasa_tab, cme_datetime = ymd_hm(cme_datetime))
+
+#type converting
+tidy_nasa_tab <- type_convert(tidy_nasa_tab)
+tidy_nasa_tab
+```
+
+### Part 2: Analysis
+#### Question 1: Replication
+
+* Can you replicate the top 50 solar flare table in SpaceWeatherLive.com exactly using the data obtained from NASA? That is, if you get the top 50 solar flares from the NASA table based on their classification (e.g., X28 is the highest), do you get data for the same 50 solar flare events in the SpaceWeatherLive page? If not, why not?
+
+* Include code used to get the top 50 solar flares from the NASA table * Write a sentence or two discussing how well you can replicate the SpaceWeatherLive data from the NASA data.
+
+It isn't possible replicate the table from SpaceWeatherLive exactly from the NASA data because the NASA data and SpaceWeatherLive data have some small yet significant differences. Specifically, the NASA data is missing a few events that the SWL table has, so naturally, the tables are going to be a little different. They do, however, share a significant amount of events as well, meaning that the SWL data can be fairly well replicated, but not completely.
+
+```{r, eval=TRUE}
+# getting top 50
+top_fifty <- tidy_nasa_tab %>%
+  separate(flare_classification, c("class", "number"), sep=1) %>%
+  filter(class=="X") %>%
+  type_convert() %>%
+  arrange(desc(number)) %>%
+  slice(1:50) %>%
+  unite(flare_classification, class, number, sep="", remove = FALSE)
+
+# cleanups
+tidy_nasa_tab$temp <- NULL
+top_fifty$class <- NULL
+top_fifty$number <- NULL
+
+top_fifty
+```
+
+#### Question 2: Entity Resolution
+
+* Write a function flare_similarity which computes a similarity s(e1,e2) between flares e1∈E1 and e2∈E2.
+
+```{r, eval=FALSE}
+flare_similarity <- function(flare1, flare2) {
+  
+  date_f1 <- select(flare1, start_datetime)[[1,1]]
+  region_f1 <- select(flare1, flare_region)[[1,1]]
+  class_f1 <- select(flare1, flare_classification)[[1,1]]
+  endDate_f1 <- select(flare1, end_datetime)[[1,1]]
+  
+  date_f2 <- select(flare2, start_datetime)[[1,1]]
+  region_f2 <- select(flare2, flare_region)[[1,1]]
+  class_f2 <- select(flare2, flare_classification)[[1,1]]
+  endDate_f2 <- select(flare2, end_datetime)[[1,1]]
+  
+  sim <- as.numeric(min(c(date_f1, date_f2))) / as.numeric(max(c(date_f1, date_f2))) * 100
+  sim <- as.numeric(min(c(endDate_f1, endDate_f2))) / as.numeric(max(c(endDate_f1, endDate_f2))) * 100
+  
+  if (!is.na(region_f1) && !is.na(region_f2) && region_f1 == region_f2) {
+    sim <- sim + 1
+  }
+  
+  if (!is.na(class_f1) && !is.na(class_f2) && class_f1 == class_f2) {
+    sim <- sim + 1
+  }
+  
+  sim <- sim / 4
+  
+  print(sim)
+}
+```
+
+* Write a second function flare_match that computes for each flare e1∈E1 which flare e2∈E2 is the most similar. 
+
+* Add the result of flare_match to the top 50 table as the index of the best matching row in the NASA table, or NA.
+
+
+```{r, eval=FALSE}
+flare_match <- function(df, flare) {
+  vec <- c()
+  
+  for(i in 1:511) {
+    vec[i] <- flare_similarity(flare, slice(df, i))
+  }
+  
+  if(as.numeric(max(vec)) < 25) {
+    NA
+  } else {
+    row <- which(vec == as.numeric(max(vec)))
+    mutate(dl_tab, index=NA)
+    dl_tab[as.numeric(select(flare, rank)), "index"] = row
+  }
+}
+```
+
+The similarity function used the main attributes from SpaceWeatherLive (start_datetime, end_datetime, classification, and region). Because the classification and region are categorical data types, I added them as 1, then added a percentage of similarity between the dates on top of all of that. I then divided everything by four to get an average similarity. Next, I applied the function to every row of the NASA table in order to find which flare matched best. If no row has a similarity rating above 25, NA is returned. 
+
+#### Question 3: Analysis 
+
+* Prepare one plot that shows the top 50 solar flares in context with all data available in the NASA dataset. 
+
+```{r, eval=TRUE}
+plot <- tidy_nasa_tab %>%
+  ggplot(aes(x = start_datetime, y = start_frequency)) +
+  geom_point() + 
+  geom_point(data = top_fifty, aes(colour="blue"))
+plot
+```
+
+This plot is the start frequency of the flares over time. The top 50 flares are represented with blue points, while the rest are in black. The intent of this plot is to observe the relationship between frequency and time of the flares, which we can can show with covariance. In this plot, it seems like there isn't much covariance between the two variables, as the points are scattered all over the place with no visible trend. 

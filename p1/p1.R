@@ -7,9 +7,7 @@ library(tidyr)
 library(stringr)
 library(tidyverse)
 library(lubridate)
-
-url <- "https://www.spaceweatherlive.com/en/solar-activity/top-50-solar-flares"
-
+library(dplyr)
 # scrape table
 dl_tab <- url %>%
   read_html() %>%
@@ -85,10 +83,11 @@ flare_match <- function(dt, flare) {
   Print(max(apply(df, 1, flare_similarities(flare1, flare2))))
 }
 
+url <- "https://www.spaceweatherlive.com/en/solar-activity/top-50-solar-flares"
 
 nasa <- "https://cdaw.gsfc.nasa.gov/CME_list/radio/waves_type2.html"
 
-# scrape nasa table
+#scrape nasa table
 nasa_tab <- nasa %>%
   read_html() %>%
   html_node("pre") %>%

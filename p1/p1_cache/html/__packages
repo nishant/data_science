@@ -1,0 +1,15 @@
+base
+magrittr
+xml2
+rvest
+tidyr
+dplyr
+stringr
+tidyverse
+ggplot2
+tibble
+readr
+purrr
+forcats
+lubridate
+bindrcpp

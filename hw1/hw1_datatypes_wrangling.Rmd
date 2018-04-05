@@ -1,6 +1,6 @@
 #### Nishant Arora
 #### CMSC 320
-#### HW 1  
+#### Project
 
 
 ```{r knitr_setup, echo=FALSE}
