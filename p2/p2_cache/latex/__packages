@@ -1,0 +1,6 @@
+base
+dplyr
+RSQLite
+ggplot2
+scales
+bindrcpp
