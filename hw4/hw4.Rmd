@@ -15,8 +15,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, eval=TRUE, echo=FALSE}
 library(dplyr, quietly=TRUE, warn.conflicts=FALSE)
 ```
-
+## Part 1: Compare to known click rate (pA = 0.5)
 ## 1a:
+Derive an expression for Var(X) [EX has been done as an example]
+
 $$Var(\bar{X}) = Var(\frac{1}{n}\sum _{i=1}^n\:x_i)$$
 $$=\frac{1}{n^2}\sum \:_{i=1}^n\:Var\left(x_i\right)$$
 $$=n\:\cdot \:p_A\left(1-p_A\right)\cdot \frac{1}{n^2}$$
@@ -25,6 +27,7 @@ $$=\frac{p_A\left(1-p_A\right)}{n}$$
 $$\therefore Var(\bar{X}) = \frac{p_A\left(1-p_A\right)}{n}$$
 
 ## 1b:
+Based on your derivation, compute values for EX and Var(X) based on pA = 0.5 and n = 50.
 
 ```{r eval=TRUE}
 pa <- 0.5
@@ -38,6 +41,8 @@ var_samp_mean
 ```
 
 ## 1c:
+Using the result above, you can now use the CLT by approximating the distribution of X as N(EX, sqrt(Var(X))) Based on this approximation, compute p(X > pˆB). Use the R function pnorm to compute this.
+
 ```{r eval=TRUE}
 pb <- 0.6
 n <- 50
@@ -45,7 +50,30 @@ n <- 50
 exp_val_samp_mean_b <- pb
 var_samp_mean_b <- (pb * (1 - pb)) / n
 
-
-get_estimate <- function(n, p=0.5) mean(sample(c(0,1), size=50, replace=TRUE, prob=c(1-p,p)))
-pnorm(0.5, mean=.6, sd=sqrt(var_samp_mean_b))
+pnorm(0.5, mean=0.6, sd=sqrt(var_samp_mean), lower.tail=FALSE)
 ```
+
+## 1d:
+Should you reject the null hypothesis pB ≤ pA? Why?
+
+Note: if p(X > val) > α then you reject the null hypothesis.
+
+From pnorm in 1c we get 0.9213504 which is greater than the rejection level of 0.05. Therefore we reject the null hypothesis.
+
+## 1e:
+What if you had observed the same pˆB = 0.6 but with n = 100 samples. Should you reject the null hypothesis in this case? Why?
+
+```{r, eval=TRUE}
+pb <- 0.6
+n <- 100
+
+exp_val_samp_mean_1c <- pb
+var_samp_mean_1c <- (pb * (1 - pb)) / n
+
+pnorm(0.5, mean=0.6, sd=sqrt(var_samp_mean_1c), lower.tail=FALSE)
+```
+
+We get a value of 0.9793866 which is greater than the rejection level of 0.05. Therefore we rejet the null hypothesis.
+
+## 1f:
+What is the smallest value pˆB you should reject the null hypothesis with n = 100. Use the qnorm function for this. Denote this smallest value as qB.

@@ -124,23 +124,48 @@ $(document).ready(function () {
 </div>
 
 
+<div id="part-1-compare-to-known-click-rate-p_a-0.5" class="section level2">
+<h2>Part 1: Compare to known click rate (<span class="math display">\[p_A\]</span>= 0.5)</h2>
+</div>
 <div id="a" class="section level2">
 <h2>1a:</h2>
+<p>Derive an expression for Var(X) [EX has been done as an example]</p>
 <p><span class="math display">\[Var(\bar{X}) = Var(\frac{1}{n}\sum _{i=1}^n\:x_i)\]</span> <span class="math display">\[=\frac{1}{n^2}\sum \:_{i=1}^n\:Var\left(x_i\right)\]</span> <span class="math display">\[=n\:\cdot \:p_A\left(1-p_A\right)\cdot \frac{1}{n^2}\]</span> <span class="math display">\[=\frac{p_A\left(1-p_A\right)}{n}\]</span></p>
 <p><span class="math display">\[\therefore Var(\bar{X}) = \frac{p_A\left(1-p_A\right)}{n}\]</span></p>
 </div>
 <div id="b" class="section level2">
 <h2>1b:</h2>
+<p>Based on your derivation, compute values for EX and Var(X) based on <span class="math display">\[p_A\]</span> = 0.5 and n = 50.</p>
 <pre class="r"><code>pa &lt;- 0.5
 n &lt;- 50
 
 exp_val_samp_mean &lt;- pa
 var_samp_mean &lt;- (pa * (1 - pa)) / n
 
-var_samp_mean</code></pre>
+exp_val_samp_mean</code></pre>
+<pre><code>## [1] 0.5</code></pre>
+<pre class="r"><code>var_samp_mean</code></pre>
 <pre><code>## [1] 0.005</code></pre>
-<p>p({X}p_B)</p>
+</div>
+<div id="c" class="section level2">
+<h2>1c:</h2>
+<p>Using the result above, you can now use the CLT by approximating the distribution of X as N(EX, sqrt(Var(X))) Based on this approximation, compute p(X &gt; pˆB).</p>
+<pre class="r"><code>pb &lt;- 0.6
+n &lt;- 50
 
+exp_val_samp_mean_b &lt;- pb
+var_samp_mean_b &lt;- (pb * (1 - pb)) / n
+
+
+get_estimate &lt;- function(n, p=0.5) mean(sample(c(0,1), size=50, replace=TRUE, prob=c(1-p,p)))
+pnorm(0.5, mean=.6, sd=sqrt(var_samp_mean_b))</code></pre>
+<pre><code>## [1] 0.07445734</code></pre>
+</div>
+<div id="d" class="section level2">
+<h2>1d:</h2>
+<p>Should you reject the null hypothesis pB ≤ pA? Why?</p>
+<p>Note: reject it if p(X &gt; pˆB) ≤ α under this hypothesis. α is the rejection level, α = 0.05.</p>
+<p>From pnorm in 1c we get 0.07445734 which is greater than the rejection level. Therefore we do not reject the null hypothesis.</p>
 </div>
 
 

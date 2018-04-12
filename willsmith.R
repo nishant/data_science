@@ -57,3 +57,5 @@ joined_tab %>%
   labs(title="Will Smith's movies",
        x="Rotten Tomato Rating",
        y="Domestic gross (Millions)")
+
+View(dl_tab)
